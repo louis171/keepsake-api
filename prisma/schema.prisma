@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model deceased {
+  deceasedId          String          @id @db.VarChar(16)
+  deceasedUserId      String          @db.VarChar(16)
+  deceasedForename    String          @db.VarChar(100)
+  deceasedMiddlename  String?         @db.VarChar(100)
+  deceasedSurname     String          @db.VarChar(100)
+  deceasedDateOfBirth DateTime?       @db.Date
+  deceasedDateOfDeath DateTime?       @db.Date
+  deceasedDetails     String?         @db.VarChar(500)
+  deceasedCreated     DateTime        @default(now()) @db.Timestamp(0)
+  deceasedUpdated     DateTime        @default(now()) @db.Timestamp(0)
+  user                user            @relation(fields: [deceasedUserId], references: [userId], onDelete: Cascade, map: "deceasedUserId")
+  deceasedimage       deceasedimage[]
+  memory              memory[]
+
+  @@index([deceasedUserId], map: "deceasedUserId_idx")
+}
+
+model user {
+  userId       String     @id @db.VarChar(16)
+  userForename String     @db.VarChar(100)
+  userSurname  String     @db.VarChar(100)
+  userEmail    String     @db.VarChar(320)
+  userPassword String     @db.VarChar(500)
+  usersCreated DateTime?  @default(now()) @db.Timestamp(0)
+  usersUpdated DateTime?  @default(now()) @db.Timestamp(0)
+  userIsAdmin  Int?       @default(0) @db.TinyInt
+  usersIsUser  Int?       @default(1) @db.TinyInt
+  deceased     deceased[]
+}
+
+model memory {
+  memoryId         String        @id @db.VarChar(16)
+  memoryDeceasedId String        @db.VarChar(16)
+  memoryForename   String        @db.VarChar(100)
+  memorySurname    String        @db.VarChar(100)
+  memoryBody       String?       @db.VarChar(500)
+  memoryCreated    DateTime      @default(now()) @db.Timestamp(0)
+  memoryUpdated    DateTime      @default(now()) @db.Timestamp(0)
+  deceased         deceased      @relation(fields: [memoryDeceasedId], references: [deceasedId], onDelete: Cascade, map: "memoryDeceasedId")
+  memoryimage      memoryimage[]
+
+  @@index([memoryDeceasedId], map: "memoryDeceasedId_idx")
+}
+
+model deceasedimage {
+  deceasedImageId         String   @id @db.VarChar(16)
+  deceasedImageDeceasedId String   @db.VarChar(16)
+  deceasedImagePath       String   @db.VarChar(200)
+  deceasedImageName       String   @db.VarChar(100)
+  deceasedImageSize       String   @db.VarChar(45)
+  deceasedImageType       String   @db.VarChar(50)
+  deceasedImageCreated    DateTime @default(now()) @db.Timestamp(0)
+  deceasedImageUpdated    DateTime @default(now()) @db.Timestamp(0)
+  deceased                deceased @relation(fields: [deceasedImageDeceasedId], references: [deceasedId], onDelete: Cascade, map: "deceasedImageDeceasedId")
+
+  @@index([deceasedImageDeceasedId], map: "deceasedImageDeceasedId_idx")
+}
+
+model memoryimage {
+  memoryimageId       String   @id @db.VarChar(16)
+  memoryimageMemoryId String   @db.VarChar(16)
+  memoryImagePath     String   @db.VarChar(200)
+  memoryImageName     String   @db.VarChar(100)
+  memoryImageSize     String   @db.VarChar(45)
+  memoryImageType     String   @db.VarChar(50)
+  memoryImageCreated  DateTime @default(now()) @db.Timestamp(0)
+  memoryImageUpdated  DateTime @default(now()) @db.Timestamp(0)
+  memory              memory   @relation(fields: [memoryimageMemoryId], references: [memoryId], onDelete: Cascade, map: "memoryimageMemoryId")
+
+  @@index([memoryimageMemoryId], map: "memoryimageMemoryId_idx")
+}
