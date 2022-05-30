@@ -100,4 +100,9 @@ authRouter.post("/signin", async (req, res, next) => {
     .finally(async () => await prismaClient.$disconnect()); // Disconnects from DB
 });
 
+authRouter.post("/signout", (req, res, next) => {
+  res.clearCookie('keepsakeAccess', {domain: "localhost", path: "/"});
+  return res.status(200).json({ message: "Success" });
+});
+
 module.exports = authRouter;

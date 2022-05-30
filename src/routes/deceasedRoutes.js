@@ -104,34 +104,41 @@ deceasedRouter.get("/deceasedId:deceasedId?", async (req, res, next) => {
     .catch((err) => next(err));
 });
 
+// READ deceased by userId
 deceasedRouter.get("/user:userId?", async (req, res, next) => {
-  await prismaClient.deceased
-    .findMany({
-      where: {
-        deceasedUserId: req.query.userId,
-      },
-      select: {
-        deceasedId: true,
-        deceasedForename: true,
-        deceasedMiddlename: true,
-        deceasedSurname: true,
-        deceasedDateOfBirth: true,
-        deceasedDateOfDeath: true,
-        deceasedDetails: true,
-        deceasedUpdated: true,
-        deceasedimage: {
-          select: {
-            deceasedImageId: true,
-            deceasedImagePath: true,
-            deceasedImageName: true,
+  if (req.query.userId) {
+    await prismaClient.deceased
+      .findMany({
+        where: {
+          deceasedUserId: req.query.userId,
+        },
+        select: {
+          deceasedId: true,
+          deceasedUserId: true,
+          deceasedForename: true,
+          deceasedMiddlename: true,
+          deceasedSurname: true,
+          deceasedDateOfBirth: true,
+          deceasedDateOfDeath: true,
+          deceasedDetails: true,
+          deceasedUpdated: true,
+          deceasedCreated: true,
+          deceasedimage: {
+            select: {
+              deceasedImageId: true,
+              deceasedImagePath: true,
+              deceasedImageName: true,
+            },
           },
         },
-      },
-    })
-    .then((deceased) => {
-      res.status(200).json(deceased);
-    })
-    .catch((err) => next(err));
+      })
+      .then((deceased) => {
+        res.status(200).json(deceased);
+      })
+      .catch((err) => next(err));
+  } else {
+    res.status(400).json({ message: "Error. Invalid request" });
+  }
 });
 
 deceasedRouter.get("/quantity:quantity?", async (req, res, next) => {
