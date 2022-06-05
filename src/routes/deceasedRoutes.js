@@ -4,10 +4,12 @@ const prismaClient = require("../../prisma/prismaClient");
 const { nanoid } = require("nanoid");
 const fs = require("fs");
 const multerConfig = require("../config/multerConfig");
+const authToken = require("../auth/authToken");
 
 // CREATE deceased with image
 deceasedRouter.post(
   "/add:deceasedUserId?",
+  authToken,
   multerConfig.handleUpload,
   async (req, res, next) => {
     const deceasedId = nanoid(16);
@@ -105,7 +107,7 @@ deceasedRouter.get("/deceasedId:deceasedId?", async (req, res, next) => {
 });
 
 // READ deceased by userId
-deceasedRouter.get("/user:userId?", async (req, res, next) => {
+deceasedRouter.get("/user:userId?", authToken, async (req, res, next) => {
   if (req.query.userId) {
     await prismaClient.deceased
       .findMany({
@@ -175,6 +177,7 @@ deceasedRouter.get("/quantity:quantity?", async (req, res, next) => {
 // UPDATE by deceasedId **ADD IMAGE**
 deceasedRouter.put(
   "/update:deceasedId?",
+  authToken,
   multerConfig.handleUpload,
   async (req, res, next) => {
     await prismaClient.deceased
@@ -210,31 +213,38 @@ deceasedRouter.put(
   }
 );
 
-deceasedRouter.delete("/delete:deceasedId?", async (req, res, next) => {
-  await prismaClient.deceasedimage
-    .findFirst({
-      where: {
-        deceasedImageDeceasedId: req.query.deceasedId,
-      },
-    })
-    .then((image) => {
-      fs.unlink(`public/${image.deceasedImagePath.split("/").pop()}`, (err) => {
-        if (err) next(err);
-      });
-    })
-    .catch((err) => next(err)); // passing error to middleware
-  await prismaClient.deceased
-    .delete({
-      where: {
-        deceasedId: req.query.deceasedId,
-      },
-    })
-    .then(
-      res
-        .status(200)
-        .json({ message: `Deleted with ID ${req.query.deceasedId}` })
-    )
-    .catch((err) => next(err)); // passing error to middleware
-});
+deceasedRouter.delete(
+  "/delete:deceasedId?",
+  authToken,
+  async (req, res, next) => {
+    await prismaClient.deceasedimage
+      .findFirst({
+        where: {
+          deceasedImageDeceasedId: req.query.deceasedId,
+        },
+      })
+      .then((image) => {
+        fs.unlink(
+          `public/${image.deceasedImagePath.split("/").pop()}`,
+          (err) => {
+            if (err) next(err);
+          }
+        );
+      })
+      .catch((err) => next(err)); // passing error to middleware
+    await prismaClient.deceased
+      .delete({
+        where: {
+          deceasedId: req.query.deceasedId,
+        },
+      })
+      .then(
+        res
+          .status(200)
+          .json({ message: `Deleted with ID ${req.query.deceasedId}` })
+      )
+      .catch((err) => next(err)); // passing error to middleware
+  }
+);
 
 module.exports = deceasedRouter;

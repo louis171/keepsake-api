@@ -4,10 +4,12 @@ const prismaClient = require("../../prisma/prismaClient");
 const { nanoid } = require("nanoid");
 const fs = require("fs");
 const multerConfig = require("../config/multerConfig");
+const authToken = require("../auth/authToken");
 
 // CREATE memory
 memoryRouter.post(
   "/add:deceasedId?",
+  authToken,
   multerConfig.handleUpload,
   async (req, res, next) => {
     const memoryId = nanoid(16);
@@ -72,6 +74,7 @@ memoryRouter.get("/:deceasedId?", async (req, res, next) => {
 // update memory by memoryId
 memoryRouter.put(
   "/update:memoryId?",
+  authToken,
   multerConfig.handleUpload,
   async (req, res, next) => {
     const url = req.protocol + "://" + req.get("host") + "/public";
@@ -108,7 +111,7 @@ memoryRouter.put(
   }
 );
 
-memoryRouter.delete("/delete:memoryId?", async (req, res, next) => {
+memoryRouter.delete("/delete:memoryId?", authToken, async (req, res, next) => {
   await prismaClient.memory
     .delete({
       where: {
