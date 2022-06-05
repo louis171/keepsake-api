@@ -107,7 +107,7 @@ deceasedRouter.get("/deceasedId:deceasedId?", async (req, res, next) => {
 });
 
 // READ deceased by userId
-deceasedRouter.get("/user:userId?", authToken, async (req, res, next) => {
+deceasedRouter.get("/user:userId?", async (req, res, next) => {
   if (req.query.userId) {
     await prismaClient.deceased
       .findMany({

@@ -101,7 +101,7 @@ authRouter.post("/signin", async (req, res, next) => {
 });
 
 authRouter.post("/signout", (req, res, next) => {
-  res.clearCookie('keepsakeAccess', {domain: "localhost", path: "/"});
+  res.clearCookie("keepsakeAccess", { domain: "localhost", path: "/" });
   return res.status(200).json({ message: "Success" });
 });
 
