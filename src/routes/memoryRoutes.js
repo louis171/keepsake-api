@@ -112,6 +112,21 @@ memoryRouter.put(
 );
 
 memoryRouter.delete("/delete:memoryId?", authToken, async (req, res, next) => {
+  // Finds memoryImages using memoryId
+  await prismaClient.memoryimage
+    .findFirst({
+      where: {
+        memoryimageMemoryId: req.query.memoryId,
+      },
+    })
+    .then((image) => {
+      // Deletes images from public folder
+      fs.unlink(`public/${image.memoryImagePath.split("/").pop()}`, (err) => {
+        if (err) next(err);
+      });
+    })
+    .catch((err) => next(err)); // passing error to middleware
+
   await prismaClient.memory
     .delete({
       where: {

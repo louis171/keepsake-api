@@ -213,10 +213,43 @@ deceasedRouter.put(
   }
 );
 
+// DELETE by deceasedId
 deceasedRouter.delete(
   "/delete:deceasedId?",
   authToken,
   async (req, res, next) => {
+    // Finds memories associated with the deceased (keepsake page) using the deceasedId
+    await prismaClient.memory
+      .findMany({
+        where: {
+          memoryDeceasedId: req.query.deceasedId,
+        },
+        select: {
+          memoryId: true,
+          memoryDeceasedId: true,
+          memoryimage: {
+            select: {
+              memoryimageId: true,
+              memoryimageMemoryId: true,
+              memoryImagePath: true,
+            },
+          },
+        },
+      })
+      .then((memories) => {
+        for (const memory of memories) {
+          // Loops through returned memories and deleted images from folder
+          fs.unlink(
+            `public/${memory.memoryimage[0].memoryImagePath.split("/").pop()}`,
+            (err) => {
+              if (err) next(err);
+            }
+          );
+        }
+      })
+      .catch((err) => next(err)); // passing error to middleware
+
+      // Finds deceasedImages using deceasedId
     await prismaClient.deceasedimage
       .findFirst({
         where: {
@@ -224,6 +257,7 @@ deceasedRouter.delete(
         },
       })
       .then((image) => {
+        // Deletes images from public folder
         fs.unlink(
           `public/${image.deceasedImagePath.split("/").pop()}`,
           (err) => {
@@ -232,6 +266,8 @@ deceasedRouter.delete(
         );
       })
       .catch((err) => next(err)); // passing error to middleware
+
+      // Finally deletes rows from DB. Only needs to delete deceased as the FK will cascade
     await prismaClient.deceased
       .delete({
         where: {
