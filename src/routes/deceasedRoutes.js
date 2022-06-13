@@ -178,7 +178,7 @@ deceasedRouter.get("/quantity:quantity?", async (req, res, next) => {
 deceasedRouter.put(
   "/update:deceasedId?",
   authToken,
-  multerConfig.handleUpload,
+  multerConfig.noUpload,
   async (req, res, next) => {
     await prismaClient.deceased
       .update({
@@ -192,15 +192,6 @@ deceasedRouter.put(
           deceasedDateOfBirth: new Date(req.body.deceasedDateOfBirth),
           deceasedDateOfDeath: new Date(req.body.deceasedDateOfDeath),
           deceasedDetails: req.body.deceasedDetails,
-          memoryimage: {
-            data: {
-              deceasedImageId: req.file.filename.split("!")[0],
-              deceasedImagePath: path,
-              deceasedImageName: req.file.originalname,
-              deceasedImageSize: req.file.size.toString(),
-              deceasedImageType: req.file.mimetype,
-            },
-          },
         },
       })
       .then((deceased) => {
@@ -210,6 +201,35 @@ deceasedRouter.put(
         });
       })
       .catch((err) => next(err));
+  }
+);
+
+deceasedRouter.put(
+  "/image/update:deceasedImageId?",
+  authToken,
+  multerConfig.handleUpload,
+  async (req, res, next) => {
+    const url = req.protocol + "://" + req.get("host") + "/public";
+    const path = url + "/" + req.file.path.split("\\")[1];
+    await prismaClient.deceasedimage
+      .update({
+        where: {
+          deceasedImageId: req.query.deceasedImageId,
+        },
+        data: {
+          deceasedImagePath: path,
+          deceasedImageName: req.file.originalname,
+          deceasedImageSize: req.file.size.toString(),
+          deceasedImageType: req.file.mimetype,
+        },
+      })
+      .then((deceasedImage) => {
+        res.status(200).json({
+          message: `Updated image with ID ${req.query.deceasedImageId}`,
+          deceasedImage: deceasedImage,
+        });
+      })
+      .catch((err) => next(err)); // passing error to middleware
   }
 );
 
@@ -249,7 +269,7 @@ deceasedRouter.delete(
       })
       .catch((err) => next(err)); // passing error to middleware
 
-      // Finds deceasedImages using deceasedId
+    // Finds deceasedImages using deceasedId
     await prismaClient.deceasedimage
       .findFirst({
         where: {
@@ -267,7 +287,7 @@ deceasedRouter.delete(
       })
       .catch((err) => next(err)); // passing error to middleware
 
-      // Finally deletes rows from DB. Only needs to delete deceased as the FK will cascade
+    // Finally deletes rows from DB. Only needs to delete deceased as the FK will cascade
     await prismaClient.deceased
       .delete({
         where: {

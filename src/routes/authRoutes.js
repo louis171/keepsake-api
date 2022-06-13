@@ -41,6 +41,7 @@ authRouter.post(
 // Handles user signin and creation of cookies/jwt
 authRouter.post("/signin", async (req, res, next) => {
   const expirationAccess = process.env.ACCESS_TOKEN_EXPIRE;
+  //const expirationAccess = 1000;
 
   await prismaClient.user
     .findFirst({

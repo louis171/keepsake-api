@@ -127,6 +127,7 @@ memoryRouter.delete("/delete:memoryId?", authToken, async (req, res, next) => {
     })
     .catch((err) => next(err)); // passing error to middleware
 
+    // Deletes memory from DB
   await prismaClient.memory
     .delete({
       where: {
