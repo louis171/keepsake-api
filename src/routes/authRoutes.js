@@ -7,6 +7,7 @@ const argon2 = require("argon2");
 const jwt = require("jsonwebtoken");
 const { nanoid } = require("nanoid");
 const verifySignUp = require("../middleware/verifySignUp");
+const jwtErrorHandler = require("../middleware/errors/jwtErrorHandler");
 
 const { TokenExpiredError, JsonWebTokenError, NotBeforeError } = jwt;
 
@@ -104,6 +105,27 @@ authRouter.post("/signin", async (req, res, next) => {
 authRouter.post("/signout", (req, res, next) => {
   res.clearCookie("keepsakeAccess", { domain: "localhost", path: "/" });
   return res.status(200).json({ message: "Success" });
+});
+
+authRouter.post("/verify", (req, res, next) => {
+  if (req.cookies.keepsakeAccess) {
+    // verifies access token from cookie
+    jwt.verify(
+      req.cookies.keepsakeAccess,
+      process.env.ACCESS_TOKEN_SECRET,
+      (err, decrypt) => {
+        if (err) {
+          return jwtErrorHandler(err, res);
+        } else {
+          // If valid then set userId on req.user
+          res.status(200).json({ message: "Authorised" })
+        }
+      }
+    );
+  } else {
+    //
+    res.status(401).json({ message: "Unauthorised" });
+  }
 });
 
 module.exports = authRouter;
